@@ -36,28 +36,46 @@ def extract_otp(text):
     return None
 
 
+def get_max_uid(mb):
+    msgs = list(mb.fetch(AND(all=True), mark_seen=False, limit=1, reverse=True, headers_only=True))
+    return msgs[0].uid if msgs else None
+
+
 def main():
     log.info(f"Запуск OTP daemon (пользователь: {GMAIL_USER})")
-    last_uid = None
+
+    with MailBox("imap.gmail.com").login(GMAIL_USER, GMAIL_PASS, "INBOX") as mb:
+        last_uid = get_max_uid(mb)
+        log.info(f"Стартовый UID: {last_uid}")
 
     while True:
+        time.sleep(POLL_INTERVAL)
         try:
             with MailBox("imap.gmail.com").login(GMAIL_USER, GMAIL_PASS, "INBOX") as mb:
-                msgs = list(mb.fetch(AND(seen=False), mark_seen=False, limit=1, reverse=True))
-                if msgs:
-                    msg = msgs[0]
-                    if msg.uid != last_uid:
-                        last_uid = msg.uid
-                        text = (msg.subject or "") + " " + (msg.text or "") + " " + (msg.html or "")
-                        otp = extract_otp(text)
-                        if otp:
-                            copy_to_clipboard(otp)
-                            notify(otp)
-                            log.info(f"OTP скопирован: {otp} (от: {msg.from_})")
+                current_uid = get_max_uid(mb)
+                if current_uid is None or current_uid == last_uid:
+                    continue
+
+                msgs = list(mb.fetch(
+                    AND(uid=f"{last_uid}:*"),
+                    mark_seen=False,
+                    reverse=True
+                ))
+
+                for msg in msgs:
+                    if msg.uid <= last_uid:
+                        continue
+                    text = (msg.subject or "") + " " + (msg.text or "") + " " + (msg.html or "")
+                    otp = extract_otp(text)
+                    if otp:
+                        copy_to_clipboard(otp)
+                        notify(otp)
+                        log.info(f"OTP скопирован: {otp} (от: {msg.from_})")
+
+                last_uid = current_uid
+
         except Exception as e:
             log.error(f"Ошибка: {e}")
-
-        time.sleep(POLL_INTERVAL)
 
 
 if __name__ == "__main__":
