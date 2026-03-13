@@ -78,3 +78,15 @@ def test_saudia_subject():
 def test_saudia_full_snippet():
     text = "Dear AlFursan Member, Please find your one-time password code below: 260051 If you did not request a one-time password you may ignore this email."
     assert extract_otp(text) == "260051"
+
+def test_saudia_html_separate_paragraphs():
+    html = '<p>Please find your one-time password code below:</p><p style="font-size:24px">614834</p>'
+    assert extract_otp(html) == "614834"
+
+def test_saudia_html_real():
+    html = '<p style="margin-bottom: 12px;">Please find your one-time password code below:</p>\r\n<p style="font-size: 24px;font-weight: 700;margin-bottom: 20px;">614834</p>'
+    assert extract_otp(html) == "614834"
+
+def test_code_in_html_tags():
+    html = '<td>Your verification code</td><td>482910</td>'
+    assert extract_otp(html) == "482910"

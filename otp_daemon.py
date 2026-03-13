@@ -32,8 +32,12 @@ def notify(code):
     ])
 
 
+def strip_html(text):
+    return re.sub(r"<[^>]+>", " ", text)
+
+
 def extract_otp(text):
-    m = OTP_INLINE.search(text)
+    m = OTP_INLINE.search(strip_html(text))
     if m:
         code = m.group(1) or m.group(2)
         if re.match(r"^(19|20)\d{2}$", code):
