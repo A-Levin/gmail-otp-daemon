@@ -68,3 +68,13 @@ def test_empty():
 
 def test_long_gap_between_code_and_number():
     assert extract_otp("Your code will be sent separately. Meanwhile enjoy our newsletter. Offer: 4829") is None
+
+def test_saudia_alfursan():
+    assert extract_otp("Please find your one-time password code below: 260051") == "260051"
+
+def test_saudia_subject():
+    assert extract_otp("Retrieve AlFursan OTP 764967") == "764967"
+
+def test_saudia_full_snippet():
+    text = "Dear AlFursan Member, Please find your one-time password code below: 260051 If you did not request a one-time password you may ignore this email."
+    assert extract_otp(text) == "260051"
