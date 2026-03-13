@@ -90,3 +90,7 @@ def test_saudia_html_real():
 def test_code_in_html_tags():
     html = '<td>Your verification code</td><td>482910</td>'
     assert extract_otp(html) == "482910"
+
+def test_saudia_whitespace_after_strip():
+    text = ' password code below: \r\n                       060303 \r\n              '
+    assert extract_otp(text) == "060303"

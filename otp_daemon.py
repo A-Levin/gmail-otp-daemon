@@ -34,7 +34,8 @@ def notify(code):
 
 
 def strip_html(text):
-    return re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"<[^>]+>", " ", text)
+    return re.sub(r"\s+", " ", text)
 
 
 def extract_otp(text):
