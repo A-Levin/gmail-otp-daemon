@@ -11,6 +11,7 @@ GMAIL_USER = os.environ["GMAIL_USER"]
 GMAIL_PASS = os.environ["GMAIL_PASS"]
 POLL_INTERVAL = int(os.getenv("POLL_INTERVAL", "10"))
 SEEN_FILE = Path(__file__).parent / ".seen_uids.json"
+LOCK_FILE = Path("/tmp/otp-daemon.lock")
 OTP_INLINE = re.compile(
     r"(?:code|код|otp|passcode|пароль)[^\d]{0,30}(\d{4,8})"
     r"|(\d{4,8})[^\d]{0,20}(?:code|код|otp)",
@@ -57,6 +58,14 @@ def save_seen(seen):
 
 
 def main():
+    import fcntl
+    lock_fd = open(LOCK_FILE, "w")
+    try:
+        fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        log.error("Другой экземпляр уже запущен. Выход.")
+        return
+
     log.info(f"Запуск OTP daemon (пользователь: {GMAIL_USER})")
     seen = load_seen()
 
