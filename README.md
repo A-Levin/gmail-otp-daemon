@@ -54,7 +54,6 @@ Create `~/.config/autostart/otp-daemon.desktop`:
 Type=Application
 Name=OTP Daemon
 Exec=env GMAIL_USER=you@gmail.com GMAIL_PASS=xxxx uv run --project /path/to/gmail-otp-daemon otp_daemon.py
-X-GNOME-Autostart-enabled=true
 ```
 
 ## Configuration
