@@ -27,10 +27,12 @@ def copy_to_clipboard(text):
 
 
 def notify(code):
+    env = os.environ.copy()
+    env.setdefault("DISPLAY", ":0.0")
     subprocess.run([
         "notify-send", "-t", "5000", "-i", "dialog-information",
         "OTP скопирован", code
-    ])
+    ], env=env)
 
 
 def strip_html(text):
