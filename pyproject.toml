@@ -1,0 +1,8 @@
+[project]
+name = "gmail-otp-daemon"
+version = "0.1.0"
+description = "Auto-copy OTP codes from Gmail to clipboard on Linux"
+requires-python = ">=3.12"
+dependencies = [
+    "imap-tools>=1.11.1",
+]
