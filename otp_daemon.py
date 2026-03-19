@@ -2,23 +2,32 @@ import os
 import re
 import time
 import json
+import datetime
 import subprocess
 import logging
 from pathlib import Path
-from imap_tools import MailBox, AND
+from imap_tools import MailBox, AND, A
 
 GMAIL_USER = os.environ["GMAIL_USER"]
 GMAIL_PASS = os.environ["GMAIL_PASS"]
 POLL_INTERVAL = int(os.getenv("POLL_INTERVAL", "10"))
 SEEN_FILE = Path(__file__).parent / ".seen_uids.json"
 LOCK_FILE = Path("/tmp/otp-daemon.lock")
+LOG_FILE = Path(__file__).parent / "otp_daemon.log"
 OTP_INLINE = re.compile(
-    r"(?:code|код|otp|passcode|пароль)[^\d]{0,30}(\d{4,8})"
-    r"|(\d{4,8})[^\d]{0,20}(?:code|код|otp)",
+    r"(?:code|код|otp|passcode|password|пароль)[^\d]{0,30}(\d{4,8})"
+    r"|(\d{4,8})[^\d]{0,20}(?:code|код|otp|password)",
     re.IGNORECASE
 )
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+    handlers=[
+        logging.FileHandler(LOG_FILE),
+        logging.StreamHandler(),
+    ]
+)
 log = logging.getLogger(__name__)
 
 
@@ -75,7 +84,9 @@ def main():
     while True:
         try:
             with MailBox("imap.gmail.com").login(GMAIL_USER, GMAIL_PASS, "INBOX") as mb:
-                msgs = list(mb.fetch(AND(seen=False), mark_seen=False, limit=20, reverse=True))
+                since = datetime.date.today() - datetime.timedelta(days=1)
+                msgs = list(mb.fetch(A(date_gte=since), mark_seen=False, limit=50, reverse=True))
+                log.info(f"Проверка: {len(msgs)} писем за последние 24ч")
                 for msg in msgs:
                     if msg.uid in seen:
                         continue
