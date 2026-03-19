@@ -19,6 +19,10 @@ OTP_INLINE = re.compile(
     r"|(\d{4,8})[^\d]{0,20}(?:code|код|otp|password)",
     re.IGNORECASE
 )
+OTP_COLON = re.compile(
+    r"(?:minutes|below|following|expire)[^:]{0,60}:\s*([a-zA-Z0-9]{4,8})\b",
+    re.IGNORECASE
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -50,12 +54,16 @@ def strip_html(text):
 
 
 def extract_otp(text):
-    m = OTP_INLINE.search(strip_html(text))
-    if m:
-        code = m.group(1) or m.group(2)
-        if re.match(r"^(19|20)\d{2}$", code):
-            return None
-        return code
+    clean = strip_html(text)
+    for pattern in (OTP_INLINE, OTP_COLON):
+        m = pattern.search(clean)
+        if m:
+            code = next(g for g in m.groups() if g is not None)
+            if re.match(r"^(19|20)\d{2}$", code):
+                continue
+            if not re.search(r"\d", code):
+                continue
+            return code
     return None
 
 
